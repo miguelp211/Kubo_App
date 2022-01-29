@@ -22,7 +22,7 @@ class StorageUtil {
     if (_preferences == null) return defValue;
     return _preferences.getString(key) ?? defValue;
   }
-  static String getList(String key, {String defValue = ''}) {
+  static List<String> getList(String key, {List<String> defValue}) {
     if (_preferences == null) return defValue;
     return _preferences.getStringList(key) ?? defValue;
   }

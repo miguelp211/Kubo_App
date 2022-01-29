@@ -23,8 +23,8 @@ class ProductOrder extends StatefulWidget {
 }
 
 class _ProductOrderState extends State<ProductOrder> {
-  int cantidad = 1;
-  int DiscountAplied = 1;
+  int cantidad;
+  double DiscountAplied;
 
   Icon actionIcon = Icon(
     Icons.favorite_border,
@@ -85,7 +85,7 @@ class _ProductOrderState extends State<ProductOrder> {
       String Fecha_creation,
       String Fecha_Promo,
       ) {
-    DiscountAplied = int.parse(Price) - int.parse(Discount);
+    DiscountAplied = int.parse(Price)-(int.parse(Price) *int.parse(Discount)*0.01);
 
     return WillPopScope(
       child: Scaffold(

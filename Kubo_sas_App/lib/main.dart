@@ -7,9 +7,8 @@ import 'package:kubo_sas_app/Services/sharedPreferences.dart';
 import 'package:page_transition/page_transition.dart';
 
 void main() async {
-
+  WidgetsFlutterBinding.ensureInitialized();
   await StorageUtil.getInstance();
-
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       systemNavigationBarColor: Color(0xFF1F1F1F), // navigation bar color
@@ -17,7 +16,8 @@ void main() async {
       //statusBarBrightness: Brightness.light,// color
       //statusBarBrightness: Brightness.dark,//status bar brigtness
       //statusBarIconBrightness:Brightness.dark , //status barIcon Brightness
-      systemNavigationBarDividerColor: Color(0xFF1F1F1F),//Navigation bar divider color
+      systemNavigationBarDividerColor:
+          Color(0xFF1F1F1F), //Navigation bar divider color
       //systemNavigationBarIconBrightness: Brightness.dark,
       //navigation bar icon
     ),
@@ -25,6 +25,7 @@ void main() async {
     //SystemUiOverlayStyle.light
     //SystemUiOverlayStyle.light
   );
+
   runApp(MyApp());
 }
 
@@ -56,6 +57,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  Icon favIcon = Icon(
+    Icons.favorite_border,
+    color: Colors.red,
+  );
   Widget appBarTitle = Text(
     "Kudo SAS App",
     style: TextStyle(color: Colors.black),
@@ -76,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool VisibleHistory = false;
 
   bool _IsSearching = false;
+  double DiscountAplied = 1;
   String _searchText = "";
 
   Widget TittleApp = const Text('Kudo App');
@@ -151,7 +158,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           color: Colors.red,
                         );
                         setState(() {
-
                           setState(() {
                             VisibleHistory = true;
                           });
@@ -165,16 +171,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           VisibleHistory = false;
                         });
                       }
-                      } else {
-                        this.historyIcon = Icon(
-                          Icons.history,
-                          color: Colors.green,
-                        );
-                        setState(() {
-                          VisibleHistory = false;
-                        });
-                      }
-
+                    } else {
+                      this.historyIcon = Icon(
+                        Icons.history,
+                        color: Colors.green,
+                      );
+                      setState(() {
+                        VisibleHistory = false;
+                      });
+                    }
                   }),
               IconButton(
                 icon: actionIcon,
@@ -188,17 +193,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       this.appBarTitle = TextField(
                         controller: _searchQuery,
                         onEditingComplete: () {
-                          if(_searchHistory.contains(_searchQuery.text)){
+                          if (_searchHistory.contains(_searchQuery.text)) {
                             _searchHistory.remove(_searchQuery.text);
-                          }else {
+                          } else {
                             _searchHistory.add(_searchQuery.text);
                             Map<String, dynamic> map = {
                               'name': _searchQuery.text,
                             };
-
-                            String rawJson = jsonEncode(map);
-                            StorageUtil.putString('Historial', rawJson);
-
+                            StorageUtil.putList("Historial", _searchHistory);
                           }
                           print("______________");
                           print(StorageUtil.getList("Historial"));
@@ -223,13 +225,14 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Column(
           children: [
             Visibility(
-                visible: VisibleHistory, child: Text("Deslice para eliminar del historial ")),
+                visible: VisibleHistory,
+                child: Text("Deslice para eliminar del historial ")),
             Visibility(
               visible: VisibleHistory,
               child: Expanded(
                 flex: 1,
                 child: Container(
-                  child:  ScrollConfiguration(
+                  child: ScrollConfiguration(
                     behavior: ScrollBehavior(),
                     child: GlowingOverscrollIndicator(
                       axisDirection: AxisDirection.down,
@@ -237,23 +240,28 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: ListView.builder(
                           itemCount: _searchHistory.length,
                           itemBuilder: (BuildContext context, int index) {
+                            List<String> SaveHis=[];
+                            if(StorageUtil.getList("Historial").length>=1){
+                              SaveHis=StorageUtil.getList("Historial");
+                            }else{
+                              SaveHis=_searchHistory;
+                            }
                             return Dismissible(
                               key: UniqueKey(),
                               onDismissed: (direction) {
-                                if(_searchHistory.length<1){
+                                if (SaveHis.length < 1) {
                                   setState(() {
-
-                                    VisibleHistory=false;
+                                    VisibleHistory = false;
                                   });
                                 }
                                 setState(() {
-                                  _searchHistory.removeAt(index);
+                                  SaveHis.removeAt(index);
                                 });
                               },
                               child: ListTile(
                                 title: Container(
                                   margin: EdgeInsets.only(bottom: 10),
-                                  child: Text(_searchHistory[index],
+                                  child: Text(SaveHis[index],
                                       style: TextStyle(
                                         color: Colors.green[10],
                                         fontSize: 17,
@@ -319,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: 2,
-                                        childAspectRatio: 1.2),
+                                        childAspectRatio: 0.5),
                                 itemBuilder: (context, index) {
                                   return decideGridTileview(
                                     index + 1,
@@ -407,89 +415,149 @@ class _MyHomePageState extends State<MyHomePage> {
       String Likes,
       String Fecha_creation,
       String Fecha_promo) {
-    return Container(
-      margin: EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment(0, 0.0), // 10% of the width, so there are ten blinds.
-          colors: <Color>[Colors.green.shade50, Colors.grey], // red to yellow
-          tileMode: TileMode.mirror, // repeats the gradient over the canvas
-        ),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: InkWell(
-          onTap: () {
-            Navigator.pushReplacement(
-              context,
-              PageTransition(
-                curve: Curves.easeInSine,
-                type: PageTransitionType.fade,
-                alignment: Alignment.centerLeft,
-                child: ProductOrder(
-                    keyImage,
-                    name,
-                    Desciption,
-                    Presentation,
-                    Price,
-                    Discount,
-                    Max,
-                    int.parse(Likes),
-                    Fecha_creation,
-                    Fecha_promo),
-                duration: Duration(milliseconds: 850),
-              ),
-            );
-          },
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(flex: 1, child: SizedBox()),
-                Expanded(
-                    flex: 10,
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(300.0),
-                        child: Image.network(
-                          keyImage,
-                          loadingBuilder: (BuildContext context, Widget child,
-                              ImageChunkEvent loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            }
-                            return Center(
-                              child: CircularProgressIndicator(
+    DiscountAplied = int.parse(Price)-(int.parse(Price) *int.parse(Discount)*0.01);
+    return Card( shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10)),
+      margin: EdgeInsets.all(15),
+      elevation: 4,
+      color: Colors.white,
+      child: Column(
+        children: [
+          Expanded(
+            flex: 8,
+            child: Container(
 
-                                valueColor: new AlwaysStoppedAnimation<Color>(
-                                    Colors.black),
-                                backgroundColor: Colors.green,
-                                strokeWidth: 4,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.all(5.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(3.0), // borde width
-                    decoration: new BoxDecoration(
-                        color: Color(0x656F00C1), // border color
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(5)),
-                    child: Text(
-                      name,
-                      style: TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                  ),
+              margin: EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment(0, 0.0), // 10% of the width, so there are ten blinds.
+                  colors: <Color>[Colors.green.shade50, Colors.grey], // red to yellow
+                  tileMode: TileMode.mirror, // repeats the gradient over the canvas
                 ),
-                Expanded(flex: 1, child: SizedBox()),
-              ])
-          //),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: InkWell(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      PageTransition(
+                        curve: Curves.easeInSine,
+                        type: PageTransitionType.fade,
+                        alignment: Alignment.centerLeft,
+                        child: ProductOrder(
+                            keyImage,
+                            name,
+                            Desciption,
+                            Presentation,
+                            Price,
+                            Discount,
+                            Max,
+                            int.parse(Likes),
+                            Fecha_creation,
+                            Fecha_promo),
+                        duration: Duration(milliseconds: 850),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(flex: 1, child: SizedBox()),
+                          Expanded(
+                              flex: 30,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(300.0),
+                                  child: Image.network(
+                                    keyImage,
+                                    loadingBuilder: (BuildContext context, Widget child,
+                                        ImageChunkEvent loadingProgress) {
+                                      if (loadingProgress == null) {
+                                        return child;
+                                      }
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          valueColor: new AlwaysStoppedAnimation<Color>(
+                                              Colors.black),
+                                          backgroundColor: Colors.green,
+                                          strokeWidth: 4,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              )),
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Container(
+                              margin:const EdgeInsets.all(10.0) ,
+                                padding: const EdgeInsets.all(3.0), // borde width
+                                decoration: new BoxDecoration(
+                                    color: Colors.green, // border color
+                                    shape: BoxShape.rectangle,
+                                    borderRadius: BorderRadius.circular(5)),
+                                child: Text(
+                                  ((1-(DiscountAplied/int.parse(Price)))*100).abs().round().toString().substring(0,2)+"%",
+                                  style: TextStyle(fontSize: 20, color: Colors.white,fontWeight: FontWeight.bold),
+                                )),
+                          ),
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Container(
+
+                                    padding: const EdgeInsets.all(3.0), // borde width
+                                    decoration: new BoxDecoration(
+                                        color: Colors.white, // border color
+                                        shape: BoxShape.rectangle,
+                                        borderRadius: BorderRadius.circular(5)),
+                                    child: Text(
+                                      name,
+                                      style: TextStyle(fontSize: 20, color: Colors.grey,fontWeight: FontWeight.bold),
+                                    ))),
+                          ),
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Container(
+                              margin: EdgeInsets.only(top: 2.0, bottom: 5, right: 15,left: 10),
+                              child: Text(
+                                "\$ " + Price + " COP",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 20,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: const Color(0xff000000),
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Container(
+                              margin: EdgeInsets.all(5.0),
+                              child: Text(
+                                "\$ " + DiscountAplied.toString() + " COP",
+                                style: TextStyle(color: Colors.black, fontSize: 24),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ),
+                          Expanded(flex: 1, child: SizedBox()),
+
+                        ]),
+                  )
+                  //),
+                  ),
+            ),
           ),
+        ],
+      ),
     );
   }
 }
