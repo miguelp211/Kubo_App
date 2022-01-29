@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:kubo_sas_app/Services/sharedPreferences.dart';
 import 'package:kubo_sas_app/main.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -12,8 +13,10 @@ class ProductOrder extends StatefulWidget {
   final String Discount;
   final String Max;
   final int Likes;
+  final String Fecha_creation;
+  final String Fecha_Promo;
   const ProductOrder(this.Url, this.Name, this.Desciption, this.Presentation,
-      this.Price, this.Discount, this.Max, this.Likes);
+      this.Price, this.Discount, this.Max, this.Likes,this.Fecha_creation,this.Fecha_Promo);
 
   @override
   _ProductOrderState createState() => _ProductOrderState();
@@ -32,14 +35,14 @@ class _ProductOrderState extends State<ProductOrder> {
     color: Colors.grey,
   );
 
-  int? NewLike;
+  int NewLike;
   String StrLike = "";
   bool Visible=false;
   @override
   void initState() {
+
     super.initState();
   }
-
   Future<bool> _willPopCallback() async {
     Navigator.pushReplacement(
       context,
@@ -65,6 +68,8 @@ class _ProductOrderState extends State<ProductOrder> {
       this.widget.Discount,
       this.widget.Max,
       this.widget.Likes,
+      this.widget.Fecha_creation,
+      this.widget.Fecha_Promo,
     );
   }
 
@@ -76,7 +81,10 @@ class _ProductOrderState extends State<ProductOrder> {
       String Price,
       String Discount,
       String Max,
-      int Likes) {
+      int Likes,
+      String Fecha_creation,
+      String Fecha_Promo,
+      ) {
     DiscountAplied = int.parse(Price) - int.parse(Discount);
 
     return WillPopScope(
@@ -108,18 +116,13 @@ class _ProductOrderState extends State<ProductOrder> {
                               URLPhoto,
                               loadingBuilder: (BuildContext context,
                                   Widget child,
-                                  ImageChunkEvent? loadingProgress) {
+                                  ImageChunkEvent loadingProgress) {
                                 if (loadingProgress == null) {
                                   return child;
                                 }
                                 return Center(
                                   child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
+
                                     valueColor:
                                         new AlwaysStoppedAnimation<Color>(
                                             Colors.black),
@@ -181,6 +184,7 @@ class _ProductOrderState extends State<ProductOrder> {
                                               );
                                               setState(() {
                                                 if (NewLike == null) {
+
                                                   StrLike =
                                                       (Likes + 1).toString();
                                                 }
@@ -412,62 +416,17 @@ class _ProductOrderState extends State<ProductOrder> {
                                       crossAxisAlignment: WrapCrossAlignment.center,
                                       spacing: 1,
                                       children: [
-                                        Wrap(
-                                          direction: Axis.horizontal,
-                                          crossAxisAlignment: WrapCrossAlignment.center,
-                                          children: [
-                                            Text(
-                                              Name,
-                                              overflow: TextOverflow.visible,
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold),
-                                              textAlign: TextAlign.left,
-                                            ),
-                                            Column(
-                                              children: [
-                                                IconButton(
-                                                  color: Colors.red,
-                                                  icon: actionIcon,
-                                                  onPressed: () {
-                                                    if (this.actionIcon.icon ==
-                                                        Icons.favorite_border) {
-                                                      this.actionIcon = Icon(
-                                                        Icons.favorite,
-                                                        color: Colors.red,
-                                                      );
-                                                      setState(() {
-                                                        if (NewLike == null) {
-                                                          StrLike =
-                                                              (Likes + 1).toString();
-                                                        }
-                                                      });
-                                                    } else {
-                                                      this.actionIcon = Icon(
-                                                        Icons.favorite_border,
-                                                        color: Colors.red,
-                                                      );
-                                                      setState(() {
-                                                        if (NewLike == null) {
-                                                          StrLike = (Likes).toString();
-                                                        }
-                                                      });
-                                                    }
-                                                  },
-                                                ),
-                                                Text(
-                                                  StrLike,
-                                                  style: TextStyle(
-                                                      color: Colors.grey, fontSize: 12),
-                                                  textAlign: TextAlign.center,
-                                                )
-                                              ],
-                                            ),
-                                          ],
+                                        Text(
+                                          "Fecha creación: "+ Fecha_creation,
+                                          overflow: TextOverflow.visible,
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                          textAlign: TextAlign.left,
                                         ),
                                         Text(
-                                          Desciption,
+                                          "Fecha promoción: "+ Fecha_Promo,
                                           style: TextStyle(
                                               color: Colors.grey, fontSize: 18),
                                           textAlign: TextAlign.left,
